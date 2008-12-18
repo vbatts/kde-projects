@@ -40,9 +40,10 @@ fi
 [ -z "$NUMJOBS" ] && export NUMJOBS=-j3
 
 # adding the qt4 executables the to build path
-export QTDIR=/usr/lib/qt4
-export KDEDIR=/opt/kde4
-export PATH=$KDEDIR/bin:$QTDIR/bin:$PATH
+export QTDIR=/usr/lib/qt
+export QT4DIR=/usr/lib/qt
+export KDEDIR=/usr
+export PATH=$KDEDIR/bin:$QT4DIR/bin:$QTDIR/bin:$PATH
 
 #OWD=$(pwd)
 #export TMP="/tmp/kde4-coex/kde/"

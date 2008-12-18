@@ -23,7 +23,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PRGNAM="strigi"
-VERSION=0.5.11
+MAJOR_VERSION=0.6.1
 MINOR_VERSION=$(svn info ${PRGNAM} | grep '^Last Changed Rev:' | awk '{ print $4 }')
 ARCH=${ARCH:-i486}
 BUILD=${BUILD:-1_vb}
@@ -47,8 +47,8 @@ cd $TMP
 #tar xvf $CWD/$PRGNAM-$VERSION.tar.bz2
 echo "building $PRGNAM-$MAJOR_VERSION.$MINOR_VERSION ..."
 
-mkdir -p build
-cd build
+mkdir -p build-$PRGNAM
+cd build-$PRGNAM
   QTDIR=/usr/lib/qt \
   PATH=$QTDIR/bin:$PATH \
   cmake \
@@ -67,11 +67,11 @@ cd -
   find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 )
 
-mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
-cp -a AUTHORS COPYING ChangeLog NEWS README TODO $PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKG/usr/doc/$PRGNAM-$MAJOR_VERSION.$MINOR_VERSION
+cp -a AUTHORS COPYING ChangeLog NEWS README TODO $PKG/usr/doc/$PRGNAM-$MAJOR_VERSION.$MINOR_VERSION
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 cd $PKG
-/sbin/makepkg -l y -c n /tmp/$PRGNAM-$VERSION.$MINOR_VERSION-$ARCH-$BUILD.tgz
+/sbin/makepkg -l y -c n /tmp/$PRGNAM-$MAJOR_VERSION.$MINOR_VERSION-$ARCH-$BUILD.tgz

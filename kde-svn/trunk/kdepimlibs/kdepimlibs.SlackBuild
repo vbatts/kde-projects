@@ -1,10 +1,10 @@
 #!/bin/sh
 
-PRGNAM=kdepimlibs4
+PRGNAM=kdepimlibs
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
 PKG=$TMP/package-$PRGNAM
-MINOR_VERSION=$(svn info ${PRGNAM/4/} | grep '^Last Changed Rev:' | awk '{ print $4 }')
+MINOR_VERSION=$(svn info ${PRGNAM} | grep '^Last Changed Rev:' | awk '{ print $4 }')
 
 # Set the config option variables if they are not already set:
 if [ -r ../KDE.options ]; then
@@ -32,7 +32,7 @@ cd build-$PRGNAM
     -DCMAKE_INSTALL_PREFIX=$KDEDIR \
     -DMAN_INSTALL_DIR=/usr/man \
     -DSYSCONF_INSTALL_DIR=/etc/kde4 \
-    $CWD/${PRGNAM/4/}/
+    $CWD/${PRGNAM}/
    make $NUMJOBS
    make install DESTDIR=$PKG
 cd -
@@ -42,7 +42,7 @@ if [ -d $PKG/usr/man ]; then
 fi
 
 mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
-cd $CWD/${PRGNAM/4/}/
+cd $CWD/${PRGNAM}/
 cp -a COPYING* DEBUG HACKING MAINTAINERS PLAN POLICIES README* \
   $PKG/usr/doc/$PRGNAM-$VERSION
 cd -

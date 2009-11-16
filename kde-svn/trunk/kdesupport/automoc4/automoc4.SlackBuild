@@ -22,52 +22,63 @@
 #  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-PRGNAM=automoc
-MAJOR_VERSION=0.9.86
-MINOR_VERSION=$(svn info ${PRGNAM} | grep '^Last Changed Rev:' | awk '{ print $4 }')
-ARCH=${ARCH:-i486}
+PRGNAM=automoc4
+ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1_vb}
 
+KDE_SVN_DIR=/home/vbatts/svn/kde-trunk/kdesupport/${PRGNAM/4//}/
+if [ ! -d $KDE_SVN_DIR ] ; then
+  echo svn dir $KDE_SVN_DIR not found
+  exit 2
+fi
+if [ -r $KDE_SVN_DIR/CMakeLists.txt ] ; then
+  MAJOR_VERSION=$(grep -e '^set.*VERSION.*"[[:digit:]]*")' $KDE_SVN_DIR/Automoc4Version.cmake | sed -e 's/^.*"\([[:digit:]]*\)".*/\1/g' | tr '\n' '.')
+else
+  MAJOR_VERSION=0.9.1.
+fi
+MINOR_VERSION=$(svn info ${KDE_SVN_DIR} | grep '^Last Changed Rev:' | awk '{ print $4 }')
+VERSION=${MAJOR_VERSION}${MINOR_VERSION}
+
+if [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+fi
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
 PKG=$TMP/package-$PRGNAM
+BUILD_DIR=$TMP/build-$PRGNAM
 
-if [ -f ../DEPS.options ] ; then
-  . ../DEPS.options
+if [ -f ../../DEPS.options ] ; then
+  . ../../DEPS.options
 fi
 
 set -e
 
-rm -rf $PKG
-mkdir -p $TMP $PKG
-cd $TMP
-echo "building $PRGNAM-$MAJOR_VERSION.$MINOR_VERSION ..."
-#chown -R root:root .
-#find . \
-# \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
-# -exec chmod 755 {} \; -o \
-# \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
-# -exec chmod 644 {} \;
-
-# First, we have to build automoc4, which is required to build akonadi
-rm -rf $TMP/$PRGNAM
-cp -av $CWD/$PRGNAM $TMP/
-cd $TMP/$PRGNAM
+rm -rf $PKG $BUILD_DIR
+mkdir -p $TMP $PKG $BUILD_DIR
+cd $BUILD_DIR
+echo "building $PRGNAM-$VERSION ..."
   cmake \
+    -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
     -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
-    -DCMAKE_INSTALL_PREFIX=${KDEDIR} .
+    -DCMAKE_INSTALL_PREFIX=${KDEDIR} \
+    -DLIB_SUFFIX=${LIBDIRSUFFIX} \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DMAN_INSTALL_DIR=/usr/man \
+    $KDE_SVN_DIR
   make
-  # We'll put that stuff in $PKG
   make install DESTDIR=$PKG
-#  mkdir -p $PKG/usr/bin $PKG/usr/lib/automoc4
-#  install -m 0755 automoc4 $PKG/usr/bin
-#  install -m 0644 Automoc4Config.cmake automoc4.files.in \
-#    $PKG/usr/lib/automoc4
   # and now we'll spam the build box, but it won't matter...
   make install
-cd -
+cd $KDE_SVN_DIR
 
 ( cd $PKG
   find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
@@ -79,5 +90,5 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 
 cd $PKG
-/sbin/makepkg -l y -c n /tmp/$PRGNAM-$MAJOR_VERSION.$MINOR_VERSION-$ARCH-$BUILD.tgz
+/sbin/makepkg -l y -c n /tmp/$PRGNAM-$VERSION-$ARCH-$BUILD.txz
 

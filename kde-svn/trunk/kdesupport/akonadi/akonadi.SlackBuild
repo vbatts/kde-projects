@@ -24,10 +24,6 @@
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PRGNAM=akonadi
-KDE_SVN_DIR=/home/vbatts/svn/kde-trunk/kdesupport/$PRGNAM/
-MAJOR_VERSION=1.2.61
-MINOR_VERSION=$(svn info ${KDE_SVN_DIR} | grep '^Last Changed Rev:' | awk '{ print $4 }')
-VERSION=$MAJOR_VERSION.$MINOR_VERSION
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1_vb}
 NUMJOBS=${NUMJOBS:--j6}
@@ -36,6 +32,19 @@ CWD=$(pwd)
 TMP=${TMP:-/tmp}
 PKG=$TMP/package-$PRGNAM
 BUILD_DIR=$TMP/build-$PRGNAM
+
+KDE_SVN_DIR=/home/vbatts/svn/kde-trunk/kdesupport/$PRGNAM/
+if [ ! -d $KDE_SVN_DIR ] ; then
+  echo svn dir $KDE_SVN_DIR not found
+  exit 2
+fi
+if [ -r $KDE_SVN_DIR/CMakeLists.txt ] ; then
+  MAJOR_VERSION=$(grep -e '^set.*VERSION.*"[[:digit:]]*")' $KDE_SVN_DIR/CMakeLists.txt | sed -e 's/^.*"\([[:digit:]]*\)".*/\1/g' | tr '\n' '.')
+else
+  MAJOR_VERSION=1.2.61.
+fi
+MINOR_VERSION=$(svn info ${KDE_SVN_DIR} | grep '^Last Changed Rev:' | awk '{ print $4 }')
+VERSION=${MAJOR_VERSION}${MINOR_VERSION}
 
 if [ "$ARCH" = "i486" ]; then
   SLKCFLAGS="-O2 -march=i486 -mtune=i686"
@@ -51,6 +60,7 @@ fi
 rm -rf $PKG $BUILD_DIR
 mkdir -p $TMP $PKG $BUILD_DIR
 cd $BUILD_DIR
+echo "building $PRGNAM-$VERSION ..."
   cmake \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \

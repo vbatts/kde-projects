@@ -37,7 +37,10 @@ KDE_SVN_DIR=/home/vbatts/svn/kde-trunk/kdesupport/$PRGNAM/
 if [ ! -d $KDE_SVN_DIR ] ; then
   echo svn dir $KDE_SVN_DIR not found
   exit 2
+else
+  svn up $KDE_SVN_DIR
 fi
+
 if [ -r $KDE_SVN_DIR/CMakeLists.txt ] ; then
   MAJOR_VERSION=$(grep -e '^set.*VERSION.*"[[:digit:]]*")' $KDE_SVN_DIR/CMakeLists.txt | sed -e 's/^.*"\([[:digit:]]*\)".*/\1/g' | tr '\n' '.')
 else

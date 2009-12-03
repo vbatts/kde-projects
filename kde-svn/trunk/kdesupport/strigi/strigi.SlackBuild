@@ -3,6 +3,7 @@
 # Slackware build script for strigi
 
 # Copyright 2007-2008 Robby Workman, Northport, Alabama, USA
+# Copyright 2008-2009 Vincent Batts, Birmingham, Alabama, USA
 # All rights reserved.
 
 # Redistribution and use of this script, with or without modification, is
@@ -23,15 +24,35 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PRGNAM="strigi"
-MAJOR_VERSION=0.6.1
-MINOR_VERSION=$(svn info ${PRGNAM} | grep '^Last Changed Rev:' | awk '{ print $4 }')
-ARCH=${ARCH:-i486}
+# Automatically determine the architecture we're building on:
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) export ARCH=i486 ;;
+    arm*) export ARCH=arm ;;
+    # Unless $ARCH is already set, use uname -m for all other archs:
+       *) export ARCH=$( uname -m ) ;;
+  esac
+fi
 BUILD=${BUILD:-1_vb}
 NUMJOBS=${NUMJOBS:--j6}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
 PKG=$TMP/package-$PRGNAM
+BUILD_DIR=$TMP/build-$PRGNAM
+
+KDE_SVN_DIR=/home/vbatts/svn/kde-trunk/kdesupport/$PRGNAM/
+if [ ! -d $KDE_SVN_DIR ] ; then
+  echo svn dir $KDE_SVN_DIR not found
+  exit 2
+fi
+if [ -r $KDE_SVN_DIR/CMakeLists.txt ] ; then
+  MAJOR_VERSION=$(grep -e '^set.*VERSION.* [[:digit:]]* CACHE)' $KDE_SVN_DIR/CMakeLists.txt | sed -e 's/^.* \([[:digit:]]*\) CACHE.*/\1/g' | tr '\n' '.')
+else
+  MAJOR_VERSION=0.6.1.
+fi
+MINOR_VERSION=$(svn info ${KDE_SVN_DIR} | grep '^Last Changed Rev:' | awk '{ print $4 }')
+VERSION=${MAJOR_VERSION}${MINOR_VERSION}
 
 if [ "$ARCH" = "i486" ]; then
   SLKCFLAGS="-O2 -march=i486 -mtune=i686"
@@ -41,37 +62,36 @@ elif [ "$ARCH" = "x86_64" ]; then
   SLKCFLAGS="-O2 -fPIC"
 fi
 
-rm -rf $PKG
-mkdir -p $TMP $PKG
-cd $TMP
-#tar xvf $CWD/$PRGNAM-$VERSION.tar.bz2
-echo "building $PRGNAM-$MAJOR_VERSION.$MINOR_VERSION ..."
-
-mkdir -p build-$PRGNAM
-cd build-$PRGNAM
+rm -rf $PKG $BUILD_DIR
+mkdir -p $TMP $PKG $BUILD_DIR
+cd $BUILD_DIR
+echo "building $PRGNAM-$VERSION ..."
   QTDIR=/usr/lib/qt \
   PATH=$QTDIR/bin:$PATH \
   cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DLIB_SUFFIX=${LIBDIRSUFFIX} \
     -DENABLE_INOTIFY:BOOL=ON \
     -DENABLE_DBUS:BOOL=ON \
     -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
     -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
     -DCMAKE_INSTALL_PREFIX=/usr \
-    $CWD/$PRGNAM/
+    $KDE_SVN_DIR
    make $NUMJOBS || exit 1
    make install DESTDIR=$PKG || exit 1
-cd -
+cd $KDE_SVN_DIR
 
 ( cd $PKG
   find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
   find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 )
 
-mkdir -p $PKG/usr/doc/$PRGNAM-$MAJOR_VERSION.$MINOR_VERSION
-cp -a AUTHORS COPYING ChangeLog NEWS README TODO $PKG/usr/doc/$PRGNAM-$MAJOR_VERSION.$MINOR_VERSION
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a AUTHORS COPYING ChangeLog NEWS README TODO $PKG/usr/doc/$PRGNAM-$VERSION
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 cd $PKG
-/sbin/makepkg -l y -c n /tmp/$PRGNAM-$MAJOR_VERSION.$MINOR_VERSION-$ARCH-$BUILD.tgz
+/sbin/makepkg -l y -c n /tmp/$PRGNAM-$VERSION-$ARCH-$BUILD.txz
+

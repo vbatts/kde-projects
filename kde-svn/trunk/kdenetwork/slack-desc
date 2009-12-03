@@ -6,14 +6,14 @@
 # customary to leave one space after the ':'.
 
           |-----handy-ruler------------------------------------------------------|
-kdepimlibs: kdepimlibs
-kdepimlibs:
-kdepimlibs: This module includes libraries that are central to the development and
-kdepimlibs: execution of a KDE-PIM application.
-kdepimlibs:
-kdepimlibs:
-kdepimlibs:
-kdepimlibs:
-kdepimlibs:
-kdepimlibs:
-kdepimlibs:
+kdenetwork: kdenetwork (network utilities for KDE)
+kdenetwork:
+kdenetwork: Network related utilities for the K Desktop Environment.
+kdenetwork:
+kdenetwork:
+kdenetwork:
+kdenetwork:
+kdenetwork:
+kdenetwork:
+kdenetwork:
+kdenetwork:

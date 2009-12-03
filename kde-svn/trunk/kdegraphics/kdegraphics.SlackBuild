@@ -23,7 +23,7 @@
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
-PKG=$TMP/package-kdepim
+PKG=$TMP/package-kdegraphics
 
 # Set the config option variables if they are not already set:
 if [ -r ../KDE.options ]; then
@@ -43,9 +43,9 @@ fi
 rm -rf $PKG
 mkdir -p $PKG/usr
 cd $TMP
-echo "Building kdepim-$VERSION..."
-tar xvf $CWD/../src/kdepim-$VERSION.tar.?z* || exit 1
-cd kdepim-$VERSION
+echo "Building kdegraphics-$VERSION..."
+tar xvf $CWD/../src/kdegraphics-$VERSION.tar.?z* || exit 1
+cd kdegraphics-$VERSION
 
 chown -R root:root .
 find . \
@@ -74,8 +74,9 @@ if [ -d $PKG/usr/man ]; then
   gzip -9 $PKG/usr/man/man?/*
 fi
 
-mkdir -p $PKG/usr/doc/kdepim-$VERSION
-cp -a COPYING* MAINTAINERS README* $PKG/usr/doc/kdepim-$VERSION
+mkdir -p $PKG/usr/doc/kdegraphics-$VERSION
+cp -a AUTHORS COPYING* INSTALL README \
+  $PKG/usr/doc/kdegraphics-$VERSION
 
 ( cd $PKG
   find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
@@ -87,5 +88,5 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 
 cd $PKG
-/sbin/makepkg -l y -c n $TMP/kdepim-$VERSION-$ARCH-$BUILD.txz
+/sbin/makepkg -l y -c n $TMP/kdegraphics-$VERSION-$ARCH-$BUILD.txz
 

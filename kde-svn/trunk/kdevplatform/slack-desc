@@ -5,15 +5,15 @@
 # make exactly 11 lines for the formatting to be correct.  It's also
 # customary to leave one space after the ':'.
 
-          |-----handy-ruler------------------------------------------------------|
-kdepimlibs: kdepimlibs
-kdepimlibs:
-kdepimlibs: This module includes libraries that are central to the development and
-kdepimlibs: execution of a KDE-PIM application.
-kdepimlibs:
-kdepimlibs:
-kdepimlibs:
-kdepimlibs:
-kdepimlibs:
-kdepimlibs:
-kdepimlibs:
+            |-----handy-ruler------------------------------------------------------|
+kdevplatform: kdevplatform (KDE development platform)
+kdevplatform:
+kdevplatform: This KDE module provides libraries used by kdevelop.
+kdevplatform:
+kdevplatform:
+kdevplatform:
+kdevplatform:
+kdevplatform:
+kdevplatform:
+kdevplatform:
+kdevplatform:

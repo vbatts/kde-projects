@@ -23,7 +23,7 @@
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
-PKG=$TMP/package-kdepim
+PKG=$TMP/package-kdewebdev
 
 # Set the config option variables if they are not already set:
 if [ -r ../KDE.options ]; then
@@ -42,10 +42,19 @@ fi
 
 rm -rf $PKG
 mkdir -p $PKG/usr
+
+# First, build and install Tidy:
+cd tidy 
+  echo "Building htmltidy..."
+  ARCH=$ARCH sh ./tidy.build $PKG
+cd -
+
 cd $TMP
-echo "Building kdepim-$VERSION..."
-tar xvf $CWD/../src/kdepim-$VERSION.tar.?z* || exit 1
-cd kdepim-$VERSION
+echo "Building kdewebdev-$VERSION..."
+tar xvf $CWD/../src/kdewebdev-$VERSION.tar.?z* || exit 1
+cd kdewebdev-$VERSION
+
+#zcat $CWD/kde4-kdewebdev-findtidy.diff.gz | patch -p0 --verbose || exit 1
 
 chown -R root:root .
 find . \
@@ -53,6 +62,11 @@ find . \
  -exec chmod 755 {} \; -o \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
+
+# Maybe we won't need this again...
+#    -DWITH_RUBY:BOOL=OFF \
+cp klinkstatus/src/tidy/tidyx.h{,.orig}
+zcat $CWD/include-tidy.patch.gz | patch -p0
 
 mkdir -p build
 cd build
@@ -65,6 +79,8 @@ cd build
     -DMAN_INSTALL_DIR=/usr/man \
     -DSYSCONF_INSTALL_DIR=/etc/kde \
     -DLIB_SUFFIX=${LIBDIRSUFFIX} \
+    -DLIBTIDY_INCLUDE_DIR=$PKG/usr/include \
+    -DLIBTIDY_LIBRARIES=$PKG/usr/lib${LIBDIRSUFFIX}/libtidy.so \
     ..
    make $NUMJOBS || exit 1
    make install DESTDIR=$PKG || exit 1
@@ -74,8 +90,9 @@ if [ -d $PKG/usr/man ]; then
   gzip -9 $PKG/usr/man/man?/*
 fi
 
-mkdir -p $PKG/usr/doc/kdepim-$VERSION
-cp -a COPYING* MAINTAINERS README* $PKG/usr/doc/kdepim-$VERSION
+mkdir -p $PKG/usr/doc/kdewebdev-$VERSION
+cp -a AUTHORS COPYING* INSTALL* NEWS PACKAGING README TODO VERSION \
+  $PKG/usr/doc/kdewebdev-$VERSION
 
 ( cd $PKG
   find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
@@ -87,5 +104,5 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 
 cd $PKG
-/sbin/makepkg -l y -c n $TMP/kdepim-$VERSION-$ARCH-$BUILD.txz
+/sbin/makepkg -l y -c n $TMP/kdewebdev-$VERSION-$ARCH-$BUILD.txz
 

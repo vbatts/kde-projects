@@ -1,10 +1,17 @@
+#!/bin/sh
+
 # Set default version/arch/build.  You can override these settings
 # in the SlackBuild scripts for each package (koffice, for example,
 # usually has a different version number), or by setting your own
 # environment variables.
 
-[ -z $VERSION ] && export VERSION=4.3.3
-[ -z $BUILD ] && export BUILD=1_vb
+[ -z "$VERSION" ] && export VERSION=4.3.3
+[ -z "$BUILD" ] && export BUILD=1_vb
+[ -z "$PKG_TYPE" ] && export PKG_TYPE="txz"
+# Use this to set the number of parallel make jobs:
+[ -z "$NUMJOBS" ] && export NUMJOBS="-j7"
+[ -z "$KDE_SVN_DIR" ] && export KDE_SVN_DIR="/home/vbatts/svn/kde-svn/"
+[ -z "$TMP" ] && export TMP="/tmp/build-kde-svn"
 
 # Automatically determine the architecture we're building on:
 if [ -z "$ARCH" ]; then
@@ -36,11 +43,62 @@ if [ -z "$SLKCFLAGS" ]; then
   fi
 fi
 
-# Use this to set the number of parallel make jobs:
-if [ -z "$NUMJOBS" ]; then
-  export NUMJOBS="-j7"
-fi
-
 # Additional cmake flags that are spanned across the KDE modules
-export KDE_OPT_ARGS=" -DKDE4_ENABLE_FINAL=\"ON\"  -DSITE=\"slackware.com\" "
+export KDE_OPT_ARGS=" -DKDE4_ENABLE_FINAL=\"ON\"  -DSITE=\"slackware.com\"  -DKDE_DISTRIBUTION_TEXT=\"volkerdi@slackware.com\" "
+export KDE_SVN_REPO="svn://anonsvn.kde.org/home/kde/trunk"
+
+## Functions for svn checking
+
+function checkout() {
+  PRGNAM=$1
+
+  if [ "$PRGNAM" = "kopete-cryptography" ] ; then
+    EXTRA_PATH="/extragear/network"
+  elif [ "$PRGNAM" = "ktorrnet" ] ; then
+    EXTRA_PATH="/extragear/network"
+  elif [ "$PRGNAM" = "konq-plugins" ] ; then
+    EXTRA_PATH="/extragear/base"
+  elif [ "$PRGNAM" = "skanlite" ] ; then
+    EXTRA_PATH="/extragear/graphics"
+  elif [ "$PRGNAM" = "k3b" ] ; then
+    EXTRA_PATH="/extragear/multimedia"
+  elif [ "$PRGNAM" = "kdevelop" ] ; then
+    EXTRA_PATH="/extragear/sdk"
+  elif [ "$PRGNAM" = "guidance-power-manager" ] ; then
+    EXTRA_PATH="/extragear/utils"
+  elif [ "$PRGNAM" = "oxygen-icons" ] ; then
+    EXTRA_PATH="/kdesupport"
+  elif [ "$PRGNAM" = "koffice" ] ; then
+    EXTRA_PATH=""
+  else
+    EXTRA_PATH="/KDE"
+  fi
+
+  echo svn co ${KDE_SVN_REPO}${EXTRA_PATH}/${PRGNAM} $(PWD)/${PRGNAM}
+  svn co ${KDE_SVN_REPO}${EXTRA_PATH}/${PRGNAM} ${PRGNAM}
+}
+
+function checkOrUpdate() {
+  
+  unset MINOR_VERSION
+  unset KDE_SRC_DIR
+
+  CWD=$1
+  PRGNAM=$2
+
+  if [ -d $KDE_SVN_DIR/$PRGNAM ] ; then
+    export KDE_SRC_DIR=$KDE_SVN_DIR/$PRGNAM
+  elif [ -d $TMP/$PRGNAM ] ;then 
+    export KDE_SRC_DIR=$TMP/$PRGNAM
+  else
+    cd $TMP
+      checkout $PRGNAM
+      cd -
+    export KDE_SRC_DIR=$TMP/$PRGNAM
+  fi
+  
+  svn cleanup "${KDE_SRC_DIR}"
+  svn up "${KDE_SRC_DIR}"
+  export REVISION=$(svn info "${KDE_SRC_DIR}" | grep '^Last Changed Rev:' | awk '{ print $4 }')
+}
 
